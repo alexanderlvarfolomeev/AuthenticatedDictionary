@@ -7,22 +7,23 @@ def hash_fun(x: bytes, y: bytes) -> bytes:
 
 
 class AuthenticResponse:
-    def __init__(self, timestamp: bytes, item, proof):
+    def __init__(self, timestamp: bytes, item, proof, result: bool):
         self.timestamp = timestamp
         self.item = item
         self.proof = proof
+        self.result = result
 
     def subject_contained(self):
-        return self.proof[1] == self.item
+        return self.result
 
     def validates_against(self, timestamp: Union[bytes, None] = None):
         if timestamp is None:
             timestamp = self.timestamp
         acc = bytes(self.proof[0])
-        print(self.proof[0], acc)
+        # print(self.proof[0], acc)
         for value in self.proof[1:]:
             acc = hash_fun(acc, bytes(value))
-            print(value, acc)
-        print(acc)
-        print(timestamp)
+        #     print(value, acc)
+        # print(acc)
+        # print(timestamp)
         return timestamp == acc

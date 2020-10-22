@@ -12,24 +12,24 @@ class Node:
 
     def compute_hashes(self) -> None:
         for i in range(self.height):
-            self.compute_hash(i)
+            self.hashes[i] = self.compute_hash(i)
 
-    def compute_hash(self, index) -> None:
+    def compute_hash(self, index) -> bytes:
         if self.refs[index] is None:
-            self.hashes[index] = hash_fun(SkipList.zero, SkipList.zero)
+            return hash_fun(SkipList.zero, SkipList.zero)
         else:
             if index == 0:
                 w = self.refs[index]
-                if w.height > self.height:
-                    self.hashes[index] = hash_fun(bytes(self.item), bytes(self.item))
+                if w.height - 1 > index:
+                    return hash_fun(bytes(self.item), bytes(w.item))
                 else:
-                    self.hashes[index] = hash_fun(bytes(self.item), w.hashes[index])
+                    return hash_fun(bytes(self.item), w.hashes[index])
             else:
                 w = self.refs[index]
-                if w.height > self.height:
-                    self.hashes[index] = self.hashes[index - 1]
+                if w.height - 1 > index:
+                    return self.hashes[index - 1]
                 else:
-                    self.hashes[index] = hash_fun(self.hashes[index - 1], w.hashes[index])
+                    return hash_fun(self.hashes[index - 1], w.hashes[index])
 
     def __str__(self):
         return "Node<" + str(self.item) + ">"
@@ -40,7 +40,7 @@ class SkipList:
     zero = b'\x00'
 
     def __init__(self):
-        self.tail: Node = Node(self.zero)
+        self.tail: Node = Node(self.zero, 2)
         self.tail.compute_hashes()
         self.head: Node = Node(self.seed)
         self.head.refs[0] = self.tail
@@ -108,15 +108,14 @@ class SkipList:
         head = self.head
         tail = self.tail
         before = head.height
-        head.height = height
-        tail.height = height
+        if before < height:
+            tail.height = height + 1
+            head.height = height
         for i in range(before, height):
             tail.refs.append(None)
-            tail.hashes.append(None)
-            tail.compute_hash(i)
+            tail.hashes.append(tail.compute_hash(i))
             head.refs.append(self.tail)
-            head.hashes.append(None)
-            head.compute_hash(i)
+            head.hashes.append(head.compute_hash(i))
 
         if self.level < height:
             self.level = height
@@ -130,8 +129,10 @@ class SkipList:
 
         node.compute_hashes()
         for n, h in p.__reversed__():
-            n.compute_hash(h)
+            n.hashes[h] = n.compute_hash(h)
 
+        for i in range(before, height): # TODO delet this
+            head.hashes[i] = head.compute_hash(i)
         self.length += 1
 
     def delete(self, item):
@@ -147,8 +148,8 @@ class SkipList:
             while self.level > 1 and self.head.refs[self.level - 1] is self.tail:
                 self.level -= 1
             self.length -= 1
-            for n, h in p:
-                n.compute_hash(h)
+            for n, h in p.__reversed__():
+                n.hashes[h] = n.compute_hash(h)
             return item
 
         return None
@@ -177,25 +178,25 @@ class SkipList:
     def verify(self, item) -> AuthenticResponse:
         p = self.__get_p(item)
         p.append((p[-1][0].refs[0], 0))
-        print(str(list(map(lambda t: (str(t[0]), t[0].hashes[t[1]], t[1]), p))))
+        # print(str(list(map(lambda t: (str(t[0]), t[0].hashes[t[1]], t[1]), p))))
 
         plen = len(p)
         q = []
         wv, _ = p.pop()
         zw = wv.refs[0]
-        if zw is None:
-            q.append(self.zero)
-        elif zw.height == 1:
-            q.append(zw.hashes[0])
-        else:
-            q.append(zw.item)
+        if wv.height == 1:
+            if zw.height == 1:
+                q.append(zw.hashes[0])
+            else:
+                q.append(zw.item)
         q.append(wv.item)
+        result = wv.item == item
         j = 1
         pv = wv
         for i in range(1, plen):
             v, h = p.pop()
             w = v.refs[h]
-            if w.height - 1 == h:
+            if h == 0 or w.height - 1 == h:
                 j += 1
                 if w is not pv:
                     q.append(w.hashes[h])
@@ -205,4 +206,20 @@ class SkipList:
                     else:
                         q.append(v.hashes[h - 1])
             pv = v
-        return AuthenticResponse(self.timestamp, item, q)
+        return AuthenticResponse(self.timestamp, item, q, result)
+
+    def validate_tree(self):
+        node = self.head
+        l = []
+        while node is not None:
+            l.append(node)
+            node = node.refs[0]
+
+        for n in l.__reversed__():
+            print(n.height == len(n.refs) and n.height == len(n.hashes) or n is self.tail or n is self.head, '!', end=' ')
+            for i in range(n.height):
+                h = n.compute_hash(i)
+                print(n.hashes[i] == h, end=' ')
+            print()
+        print(self)
+        print()
