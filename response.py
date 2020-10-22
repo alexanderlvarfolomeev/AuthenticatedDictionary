@@ -1,0 +1,28 @@
+from hashlib import sha256
+from typing import Union
+
+
+def hash_fun(x: bytes, y: bytes) -> bytes:
+    return sha256(bytes(min(x, y) + max(x, y))).digest()
+
+
+class AuthenticResponse:
+    def __init__(self, timestamp: bytes, item, proof):
+        self.timestamp = timestamp
+        self.item = item
+        self.proof = proof
+
+    def subject_contained(self):
+        return self.proof[1] == self.item
+
+    def validates_against(self, timestamp: Union[bytes, None] = None):
+        if timestamp is None:
+            timestamp = self.timestamp
+        acc = bytes(self.proof[0])
+        print(self.proof[0], acc)
+        for value in self.proof[1:]:
+            acc = hash_fun(acc, bytes(value))
+            print(value, acc)
+        print(acc)
+        print(timestamp)
+        return timestamp == acc
