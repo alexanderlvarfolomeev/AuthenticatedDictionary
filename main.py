@@ -1,5 +1,5 @@
-import testList
+import benc_test
 
 
 if __name__ == '__main__':
-    testList.main()
+    benc_test.main()
