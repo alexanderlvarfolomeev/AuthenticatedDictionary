@@ -40,9 +40,9 @@ class MyTestCase(unittest.TestCase):
                 print("--- 1 validation operation %s ms ---" % t)
         xs = [i * 100000 for i in range(1, 11)]
         fig = mlp.figure(figsize=(16, 9))
-        mlp.scatter(xs, self.benches[0], s=6 ** 2, marker='^', label='insertion')
-        mlp.scatter(xs, self.benches[1], s=6 ** 2, marker='o', label='deletion')
-        mlp.scatter(xs, self.benches[2], s=6 ** 2, marker='s', label='query')
+        mlp.scatter(xs, self.benches[0], s=8 ** 2, marker='^', label='insertion')
+        mlp.scatter(xs, self.benches[1], s=8 ** 2, marker='o', label='deletion')
+        mlp.scatter(xs, self.benches[2], s=8 ** 2, marker='s', label='query')
         mlp.xlabel('number of elements', fontsize=14, fontweight='bold')
         mlp.ylabel('average time (ms)', fontsize=14, fontweight='bold')
         mlp.legend(fontsize=14)
