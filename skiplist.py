@@ -36,8 +36,10 @@ class Node:
 
 
 class SkipList:
-    seed = b'\x01'
-    zero = b'\x00'
+    seed = b'\xd1\xf7\xb7\xd5\xa6\xbd\xef^\x9f\xeb\xcfy\xe9\xff\x1d\xef\xc7|m\xd7\xb7\xf5\xc6\xbay\xde]\xe7\xbe\xf5' \
+           b'\xe7w]\xe1\xf7\xfc\xeb\xa6\x9a\xe9\xf7\x1d}\xde\xfb\xd9\xee\x9a'
+    zero = b'{N\xbay\xf7\xb5\xe5\xd6\xde\xdb\xce\xf5\xef\x87{\xe3\xdf\x1em\xf7\x1bw\xa7=m\xd6\xfc\xf7\xb6\xbc' \
+           b'\xdb\xbex\xeb~:\xdd\xfft\xef\x96\xfdi\xf7_\xf3\x9e\x1f'
 
     def __init__(self):
         self.tail: Node = Node(self.zero, 2)
@@ -131,7 +133,7 @@ class SkipList:
         for n, h in p.__reversed__():
             n.hashes[h] = n.compute_hash(h)
 
-        for i in range(before, height): # TODO delet this
+        for i in range(before, height):
             head.hashes[i] = head.compute_hash(i)
         self.length += 1
 
@@ -165,7 +167,8 @@ class SkipList:
             p.append((node, i))
         return p
 
-    def update(self, insertion: bool, item, timestamp: Union[bytes, None] = None, height: Union[int, None] = None) -> None:
+    def update(self, insertion: bool, item, timestamp: Union[bytes, None] = None, height: Union[int, None] = None)\
+            -> None:
         if insertion:
             self.insert(item, height)
         else:
@@ -178,7 +181,6 @@ class SkipList:
     def verify(self, item) -> AuthenticResponse:
         p = self.__get_p(item)
         p.append((p[-1][0].refs[0], 0))
-        # print(str(list(map(lambda t: (str(t[0]), t[0].hashes[t[1]], t[1]), p))))
 
         plen = len(p)
         q = []
@@ -207,19 +209,3 @@ class SkipList:
                         q.append(v.hashes[h - 1])
             pv = v
         return AuthenticResponse(self.timestamp, item, q, result)
-
-    def validate_tree(self):
-        node = self.head
-        l = []
-        while node is not None:
-            l.append(node)
-            node = node.refs[0]
-
-        for n in l.__reversed__():
-            print(n.height == len(n.refs) and n.height == len(n.hashes) or n is self.tail or n is self.head, '!', end=' ')
-            for i in range(n.height):
-                h = n.compute_hash(i)
-                print(n.hashes[i] == h, end=' ')
-            print()
-        print(self)
-        print()

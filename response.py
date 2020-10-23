@@ -20,10 +20,6 @@ class AuthenticResponse:
         if timestamp is None:
             timestamp = self.timestamp
         acc = bytes(self.proof[0])
-        # print(self.proof[0], acc)
         for value in self.proof[1:]:
             acc = hash_fun(acc, bytes(value))
-        #     print(value, acc)
-        # print(acc)
-        # print(timestamp)
         return timestamp == acc
