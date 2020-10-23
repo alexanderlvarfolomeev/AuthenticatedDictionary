@@ -6,12 +6,12 @@ import time
 from math import ceil, log2
 
 
-def int2bytes(item):
-    item.to_bytes(ceil(log2(item) / 8), byteorder='big')
+def int2bytes(item: int) -> bytes:
+    return item.to_bytes(ceil(log2(item + 1) / 8), byteorder='big')
 
 
 class MyTestCase(unittest.TestCase):
-    argss = [(random.randint(0, 2), random.randint(0, 100)) for i in range(400000)]
+    argss = [(random.randint(0, 2), int2bytes(random.randint(0, 100))) for i in range(400000)]
 
     def test_skiplist_as_multiset(self):
         list = skiplist.SkipList()
@@ -19,7 +19,7 @@ class MyTestCase(unittest.TestCase):
         set = multidict.MultiDict()
         sops = [lambda x: str(x) in set, lambda x: set.add(str(x), x), lambda x: None if str(x) not in set else set.pop(str(x))]
         for op, c in self.argss:
-            lres = lops[op](int2bytes(c))
+            lres = lops[op](c)
             sres = sops[op](c)
             # print(lres, sres)
             self.assertEqual(lres, sres)
@@ -28,16 +28,16 @@ class MyTestCase(unittest.TestCase):
     def test_skiplist_as_dictionary(self):
         for _x in range(1000):
             list = skiplist.SkipList()
-            creation = [(random.randint(1, 2), random.randint(0, 100)) for _ in range(500)]
+            creation = [(random.randint(1, 2), int2bytes(random.randint(0, 100))) for _ in range(500)]
             for op, c in creation:
                 # print("insert" if op == 1 else "delete", c)
-                list.update(op == 1, int2bytes(c))
+                list.update(op == 1, c)
                 # list.validate_tree()
             # print(list)
-            validation = [random.randint(0, 100) for _ in range(100)]
+            validation = [int2bytes(random.randint(0, 100)) for _ in range(100)]
             for c in validation:
                 # print("verify(" + str(i) + ")")
-                response = list.verify(int2bytes(c))
+                response = list.verify(c)
                 self.assertEqual(response.validates_against(), True)
                 self.assertEqual(list.contains(c), response.subject_contained())
 
