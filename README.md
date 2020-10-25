@@ -1,1 +1,1 @@
-# Efficient Authenticated Dictionary with Skip Lists and Commutative Hashing
+# Efficient Authenticated Dictionary with Skip List and Commutative Hashing
